@@ -1,0 +1,50 @@
+[package]
+name = "budget-coder"
+version = "0.1.0"
+edition = "2021"
+description = "A Prompt Compiler — let cheap models read your code, let expensive models write code"
+license = "MIT"
+repository = "https://github.com/user/budget-coder"
+keywords = ["ai", "prompt", "coding", "llm", "tree-sitter"]
+categories = ["command-line-utilities", "development-tools"]
+build = "build.rs"
+
+[[bin]]
+name = "budget-coder"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2" }
+
+[dependencies]
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Tauri
+tauri = { version = "2" }
+tauri-plugin-log = "2"
+
+# Directory scanning (.gitignore aware, same engine as ripgrep)
+ignore = "0.4"
+
+# Tree-sitter AST parsing
+tree-sitter = "0.24"
+tree-sitter-javascript = "0.23"
+tree-sitter-typescript = "0.23"
+tree-sitter-python = "0.23"
+tree-sitter-rust = "0.23"
+
+# Token counting
+tiktoken-rs = "0.6"
+
+# Utilities
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+colored = "2"
+log = "0.4"
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
