@@ -1,5 +1,9 @@
 // Hedge Coding — A Prompt Compiler for AI Coding Assistants
 // "Let cheap models read your code, let expensive models write code."
+//
+// Hide the console window on Windows release builds.
+// This ensures users see only the desktop GUI, not a background terminal.
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod analyzer;
 mod compiler;
