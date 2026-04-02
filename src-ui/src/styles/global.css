@@ -33,6 +33,22 @@
     font-display: swap;
 }
 
+/* ─── Local CJK Fonts (fallback for non-Mac users) ── */
+@font-face {
+    font-family: 'Noto Sans SC';
+    src: url('/fonts/noto-sans-sc-400.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Noto Sans SC';
+    src: url('/fonts/noto-sans-sc-500.otf') format('opentype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
 
 /* ─── Base Reset ─────────────────────────────────────── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -75,8 +91,8 @@
 }
 
 :root {
-    /* Local Inter font — bundled in ui/fonts/, no external CDN */
-    --font: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    /* Local Inter font for English, premium system fallbacks for CJK (PingFang for iOS/Mac, YaHei for Windows) */
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
     --mono: 'Cascadia Code', 'Cascadia Mono', Consolas, 'Courier New', monospace;
     --radius-sm: 8px;
     --radius-md: 12px;
@@ -120,23 +136,23 @@
     --glass-blur: blur(24px);
 }
 
-/* ─── Light Theme (Native iOS Style base, adapted with Hedge Coffee) ─── */
+/* ─── Light Theme (Claude Paper Style, soft and warm) ─── */
 [data-theme="light"] {
-    --bg-app: #f2f2f7;
-    --bg-panel: rgba(255, 255, 255, 0.85);
-    --bg-card: rgba(255, 255, 255, 1);
+    --bg-app: #f4f3ee; /* 护眼暖米色背景 */
+    --bg-panel: rgba(253, 252, 249, 0.95); /* 柔和的偏暖白面板，减少刺眼感 */
+    --bg-card: #ffffff;
     --bg-input: #ffffff;
     --bg-input-focus: #ffffff;
-    --bg-hover: rgba(0, 0, 0, 0.05);
-    --bg-active: rgba(0, 0, 0, 0.1);
+    --bg-hover: rgba(0, 0, 0, 0.04);
+    --bg-active: rgba(0, 0, 0, 0.08);
 
-    --border: rgba(60, 60, 67, 0.12);
-    --border-input: rgba(60, 60, 67, 0.18);
+    --border: rgba(0, 0, 0, 0.08);
+    --border-input: rgba(0, 0, 0, 0.12);
     --border-focus: rgba(196, 149, 106, 0.5);
 
-    --text-1: #000000;
-    --text-2: rgba(60, 60, 67, 0.6);
-    --text-3: #8e8e93;
+    --text-1: #2d2c2a; /* 舍弃纯黑，使用深暖灰/碳色，对比度更舒适 */
+    --text-2: #6b6965;
+    --text-3: #9e9c98;
 
     --accent: #c4956a;
     --accent-hover: #b5865c;
@@ -254,7 +270,7 @@ body {
     border: 1px solid var(--border);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    box-shadow: var(--shadow-panel);
     overflow: hidden;
 }
 
@@ -788,6 +804,10 @@ body {
     flex: 1;
     padding: 0; /* Remove old 8px 0 padding */
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 16px; /* 增加底部留白避免贴底 */
 }
 
 /* Model Card */
@@ -799,7 +819,7 @@ body {
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    box-shadow: var(--shadow-panel);
 }
 
 .model-head {
