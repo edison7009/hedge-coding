@@ -1,0 +1,142 @@
+/* HedgePrinciples.css — 9 Commandments manifesto viewer */
+
+.principles-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ─── Floating Badge ───────────────────────────────────────────────────────── */
+.principles-memory-badge {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-family: var(--font);
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid rgba(196, 149, 106, 0.35);
+  border-radius: 12px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+}
+
+/* ─── Manifesto Body ─────────────────────────────────────────────────────── */
+.principles-body {
+  padding: 32px 40px 48px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.principles-body h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-1);
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+  line-height: 1.25;
+}
+
+.principles-body .subtitle {
+  font-size: 15.5px;
+  color: var(--text-2);
+  line-height: 1.7;
+  margin: 0 0 10px;
+}
+
+.principles-body h2 {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--accent);
+  margin: 32px 0 12px;
+  letter-spacing: 0.02em;
+}
+
+.principles-body h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 22px 0 8px;
+  line-height: 1.35;
+}
+
+.principles-body p {
+  font-size: 15px;
+  color: var(--text-2);
+  line-height: 1.7;
+  margin: 0 0 8px;
+}
+
+.principles-body strong {
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.principles-body code {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  background: var(--bg-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent);
+}
+
+.principles-body ol {
+  margin: 10px 0 14px 0;
+  padding-left: 24px;
+}
+
+.principles-body ol li {
+  font-size: 15px;
+  color: var(--text-2);
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+
+.principles-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0 20px;
+  font-size: 14.5px;
+}
+
+.principles-body th {
+  text-align: left;
+  padding: 8px 14px;
+  background: var(--bg-2);
+  color: var(--text-3);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.principles-body td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-2);
+  line-height: 1.55;
+}
+
+.principles-body tr:last-child td { border-bottom: none; }
+
+.principles-body blockquote {
+  margin: 18px 0;
+  padding: 14px 20px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-bg);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 15px;
+  color: var(--text-1);
+  line-height: 1.7;
+  font-style: italic;
+}

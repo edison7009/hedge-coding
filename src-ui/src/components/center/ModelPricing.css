@@ -1,0 +1,163 @@
+.model-pricing-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pricing-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.pricing-search {
+  flex: 1;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: var(--text-1);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.pricing-search:focus { border-color: var(--accent); }
+.pricing-search::placeholder { color: var(--text-3); }
+
+.pricing-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pricing-updated {
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+/* ScrollPanel */
+.pricing-body {
+  flex: 1;
+}
+
+/* Grid layout sections */
+.provider-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.provider-section:last-child {
+  border-bottom: none;
+}
+
+.provider-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-1);
+  margin-bottom: 12px;
+}
+
+.provider-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  color: var(--text-2);
+}
+
+.provider-grid-ticker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  column-gap: 24px;
+  row-gap: 0;
+}
+
+.pricing-ticker-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.ticker-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 12px;
+}
+
+.ticker-prices {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ticker-sep {
+  color: var(--border);
+  font-size: 10px;
+}
+
+.price {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  width: 45px;
+  text-align: right;
+  display: inline-block;
+}
+.price.expensive { color: #e87561; }
+.price.mid       { color: var(--accent); }
+.price.cheap     { color: #7ec783; }
+
+/* empty states */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--text-3);
+}
+
+.spin-loader {
+  animation: hc-spin 1s linear infinite;
+  color: var(--text-3);
+}
+
+@keyframes hc-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+.empty-state p {
+  font-size: 13px;
+  max-width: 250px;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}

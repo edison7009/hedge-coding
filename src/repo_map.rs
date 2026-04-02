@@ -1,4 +1,4 @@
-// Budget Coder — Repo Map generator
+// Hedge Coding — Repo Map generator
 // Produces a compact text representation of project structure + symbols
 // Inspired by Aider's repo map approach
 
@@ -26,7 +26,7 @@ pub struct RepoMap {
 }
 
 /// Generate a repo map from scanned files
-pub fn generate_repo_map(root: &Path, files: &[FileEntry]) -> Result<RepoMap> {
+pub fn generate_repo_map(_root: &Path, files: &[FileEntry]) -> Result<RepoMap> {
     let mut file_symbols_list = Vec::new();
     let mut total_symbols = 0;
 
@@ -82,7 +82,70 @@ pub fn render_repo_map(map: &RepoMap) -> String {
     output
 }
 
+/// Render a focused repo map scoped to a set of target file paths.
+///
+/// - Target files and their **sibling files in the same directory**: full expansion (all symbols).
+/// - All other directories: collapsed to one line showing only the dir name + file count.
+///
+/// This keeps the map architecturally complete while slashing token usage for large projects.
+pub fn render_repo_map_focused(map: &RepoMap, target_paths: &[String]) -> String {
+    use std::collections::HashSet;
+
+    // Build set of directories that contain at least one target file
+    let relevant_dirs: HashSet<String> = target_paths
+        .iter()
+        .filter_map(|p| Path::new(p).parent().map(|d| d.to_string_lossy().to_string()))
+        .collect();
+
+    // Group all files by directory
+    let mut dir_files: HashMap<String, Vec<&FileSymbols>> = HashMap::new();
+    for file_syms in &map.files {
+        let dir = Path::new(&file_syms.relative_path)
+            .parent()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_else(|| ".".to_string());
+        dir_files.entry(dir).or_default().push(file_syms);
+    }
+
+    let mut dirs: Vec<String> = dir_files.keys().cloned().collect();
+    dirs.sort();
+
+    let mut output = String::new();
+
+    for dir in &dirs {
+        let files = dir_files.get(dir).map(|v| v.as_slice()).unwrap_or(&[]);
+
+        // Is this directory relevant to the task?
+        // Normalize: repo root files live in "." which we treat as always relevant
+        let is_relevant = dir == "." || relevant_dirs.contains(dir);
+
+        if is_relevant {
+            // Full expansion: show every file in this directory with all its symbols
+            for file_syms in files {
+                output.push_str(&file_syms.relative_path);
+                output.push_str(&format!(" ({} lines)\n", file_syms.line_count));
+                if file_syms.symbols.is_empty() {
+                    output.push_str("  (no symbols)\n");
+                } else {
+                    for sym in &file_syms.symbols {
+                        output.push_str(&format!("  ├─ {} {}\n", sym.kind, sym.name));
+                    }
+                }
+                output.push('\n');
+            }
+        } else {
+            // Collapsed: just the directory line — no file/symbol detail
+            output.push_str(&format!("{}/ ({} files, not directly involved)\n", dir, files.len()));
+        }
+    }
+
+    output
+}
+
+
+
 /// Render a compact version of the repo map (just file paths + symbol counts)
+#[allow(dead_code)]
 pub fn render_repo_map_compact(map: &RepoMap) -> String {
     let mut output = String::new();
 
@@ -170,6 +233,7 @@ pub fn print_repo_map(map: &RepoMap) {
             let kind_str = format!("{}", sym.kind);
             let kind_colored = match sym.kind {
                 SymbolKind::Function => kind_str.bright_blue(),
+                SymbolKind::Method => kind_str.blue(),
                 SymbolKind::Class | SymbolKind::Struct => kind_str.bright_yellow(),
                 SymbolKind::Interface | SymbolKind::TypeAlias => kind_str.bright_magenta(),
                 SymbolKind::Enum => kind_str.bright_green(),
@@ -178,6 +242,7 @@ pub fn print_repo_map(map: &RepoMap) {
                 SymbolKind::Constant => kind_str.bright_red(),
                 SymbolKind::Export => kind_str.white(),
                 SymbolKind::Module => kind_str.yellow(),
+                SymbolKind::Macro => kind_str.bright_white(),
             };
             println!("  ├─ {} {}", kind_colored, sym.name.white());
         }

@@ -1,0 +1,173 @@
+/* Explorer panel — supplemental styles (base in global.css) */
+
+.explorer-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Brand (Logo & Title in the header) */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-1);
+}
+
+.brand-icon {
+    /* SVG size is 18x18, so we let it render natively but ensure it's vertically centered */
+    display: block;
+    color: #FFA500; /* Warm orange accent for the logo to match the theme */
+}
+
+.brand span {
+    font-size: 16px;       /* Increased size per user request, visually matches 18px SVG */
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+/* Recursive File Tree styles */
+.file-tree-container {
+    padding: 8px 4px 8px 8px; /* Top, Right, Bottom, Left. Keep right small so scrollbar has room */
+}
+
+.tree-dir, .tree-file {
+    font-family: var(--font);
+    font-size: 13px;
+}
+
+.tree-dir-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    user-select: none;
+    transition: background var(--transition);
+    color: var(--text-1);
+    font-weight: 500;
+}
+
+.tree-dir-header:hover {
+    background: var(--bg-hover);
+}
+
+.tree-arrow {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    font-size: 12px;
+    width: 12px;
+    text-align: center;
+    color: var(--text-3);
+}
+
+.tree-arrow.closed {
+    transform: rotate(-90deg);
+}
+
+.tree-children {
+    padding-left: 12px; /* indentation */
+    border-left: 1px dotted var(--border);
+    margin-left: 12px;
+    margin-top: 2px;
+}
+
+.tree-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    cursor: default;
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+}
+
+.tree-file:hover {
+    background: var(--bg-hover);
+    color: var(--text-1);
+}
+
+.tree-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.icon-svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.tree-fname {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tree-badge {
+    font-size: 11px;
+    color: var(--text-3);
+    flex-shrink: 0;
+}
+
+/* Status bar */
+.status-bar {
+    padding: 10px 16px;
+    font-size: 11px;
+    color: var(--text-3);
+    text-align: center;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+    font-weight: 500;
+}
+
+/* Panel label in section-title */
+.panel-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-3);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.open-folder-btn {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--border-input);
+    color: var(--text-2);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.open-folder-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-1);
+    border-color: var(--text-3);
+}
+
+.recent-folder-item:hover { background: var(--bg-3) !important; }
+

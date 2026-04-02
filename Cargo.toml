@@ -1,28 +1,29 @@
 [package]
-name = "budget-coder"
+name = "hedge-coding"
 version = "0.1.0"
 edition = "2021"
-description = "A Prompt Compiler — let cheap models read your code, let expensive models write code"
+description = "A Prompt Compiler — hedge your AI coding costs by letting cheap models read, expensive models write"
 license = "MIT"
-repository = "https://github.com/user/budget-coder"
+repository = "https://github.com/edison7009/hedge-coding"
 keywords = ["ai", "prompt", "coding", "llm", "tree-sitter"]
 categories = ["command-line-utilities", "development-tools"]
 build = "build.rs"
 
 [[bin]]
-name = "budget-coder"
+name = "hedge-coding"
 path = "src/main.rs"
 
 [build-dependencies]
-tauri-build = { version = "2" }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
 # CLI
 clap = { version = "4", features = ["derive"] }
 
 # Tauri
-tauri = { version = "2" }
+tauri = { version = "2", features = [] }
 tauri-plugin-log = "2"
+tauri-plugin-dialog = "2"
 
 # Directory scanning (.gitignore aware, same engine as ripgrep)
 ignore = "0.4"
@@ -37,14 +38,25 @@ tree-sitter-rust = "0.23"
 # Token counting
 tiktoken-rs = "0.6"
 
+# HTTP client (for deep analysis API calls)
+reqwest = { version = "0.12", default-features = false, features = ["json", "blocking", "rustls-tls"] }
+
 # Utilities
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 anyhow = "1"
 colored = "2"
 log = "0.4"
+dirs = "5"
+image = "0.25.10"
+base64 = "0.22.1"
+git2 = "0.19"
+notify = "6.1.1"
 
 [profile.release]
 opt-level = "z"
 lto = true
 strip = true
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-global-shortcut = "2"

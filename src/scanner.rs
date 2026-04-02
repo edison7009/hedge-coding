@@ -1,4 +1,4 @@
-// Budget Coder — Directory scanner using the `ignore` crate
+// Hedge Coding — Directory scanner using the `ignore` crate
 // Same engine as ripgrep — respects .gitignore automatically
 
 use crate::config::{MAX_DEPTH, MAX_FILES, MAX_FILE_SIZE};
@@ -52,7 +52,24 @@ fn is_text_extension(ext: &str) -> bool {
             | "lua" | "r" | "m" | "jl"
             | "zig" | "v" | "nim" | "cr" | "dart" | "elm"
             | "env" | "ini" | "cfg" | "conf"
-            | "lock" // included for structure, usually filtered by name
+    )
+}
+
+/// Generated or low-value files that waste tokens in the Super Prompt
+fn should_skip_filename(filename: &str) -> bool {
+    matches!(
+        filename,
+        "cargo.lock"
+            | "package-lock.json"
+            | "yarn.lock"
+            | "pnpm-lock.yaml"
+            | "composer.lock"
+            | "gemfile.lock"
+            | "poetry.lock"
+            | "pipfile.lock"
+            | "flake.lock"
+            | ".ds_store"
+            | "thumbs.db"
     )
 }
 
@@ -77,8 +94,49 @@ pub fn scan_directory(root: &Path) -> Result<ScanResult> {
             Err(_) => continue,
         };
 
-        // Skip directories
+        // Skip directories themselves
         if entry.file_type().map_or(true, |ft| !ft.is_file()) {
+            continue;
+        }
+
+        // Hard-coded directory exclusions — these NEVER belong in a Super Prompt.
+        // Uses path-segment matching to work on both Unix and Windows paths.
+        let rel = entry.path().strip_prefix(&root).unwrap_or(entry.path());
+        let segments: Vec<&str> = rel.iter()
+            .filter_map(|s| s.to_str())
+            .collect();
+        let in_excluded_dir = segments.iter().any(|seg| matches!(*seg,
+            // ── JavaScript / Node ──
+            "node_modules" | "bower_components" | ".npm" | ".yarn" | ".pnp" |
+            // ── Rust ──
+            "target" |
+            // ── Python ──
+            "__pycache__" | ".venv" | "venv" | "env" | ".env" | ".mypy_cache" |
+            ".pytest_cache" | ".tox" | "site-packages" | ".eggs" |
+            // ── Go ──
+            "vendor" |
+            // ── Java / JVM ──
+            ".gradle" | ".mvn" |
+            // ── .NET / C# ──
+            "bin" | "obj" | "packages" |
+            // ── Build outputs ──
+            "dist" | "build" | "out" | "_build" | "release" |
+            // ── Frontend frameworks ──
+            ".next" | ".nuxt" | ".svelte-kit" | ".angular" | ".parcel-cache" |
+            ".turbo" | ".vercel" | ".output" |
+            // ── Version control & IDE ──
+            ".git" | ".svn" | ".hg" | ".vs" | ".vscode" | ".idea" |
+            // ── OS junk ──
+            ".DS_Store" | "Thumbs.db" | "__MACOSX" |
+            // ── Misc caches ──
+            ".cache" | ".tmp" | "tmp" | "temp" | ".sass-cache" |
+            "coverage" | ".nyc_output" |
+            // ── Container / infra ──
+            ".terraform" | ".serverless" | ".aws-sam" |
+            // ── Auto-generated / low-value ──
+            "gen" | ".hedgecoding"
+        ));
+        if in_excluded_dir {
             continue;
         }
 
@@ -119,6 +177,12 @@ pub fn scan_directory(root: &Path) -> Result<ScanResult> {
 
         // Filter: only text files
         if !is_text_extension(&extension) && !is_known_textfile {
+            continue;
+        }
+
+        // Filter: skip generated/low-value files
+        if should_skip_filename(&filename) {
+            skipped.push(format!("{} (generated/lock file)", relative));
             continue;
         }
 

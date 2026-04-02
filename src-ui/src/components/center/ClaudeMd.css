@@ -1,0 +1,183 @@
+/* ClaudeMd.css — CLAUDE.md Project Memory Editor */
+
+.claude-md-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Header */
+.claude-md-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border-1);
+  background: var(--bg-1);
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.claude-md-header-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.claude-md-path {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.claude-md-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.claude-md-dot.unsaved { background: var(--accent-yellow, #f0a500); }
+.claude-md-dot.saved   { background: var(--accent-green, #22c55e); }
+
+.claude-md-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.claude-md-stats {
+  font-size: 11px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+/* Save Button */
+.claude-md-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid var(--border-1);
+  background: var(--bg-2);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.claude-md-save-btn:hover:not(:disabled) {
+  background: var(--bg-3);
+  color: var(--text-1);
+}
+.claude-md-save-btn.active {
+  border-color: var(--accent-blue, #3b82f6);
+  color: var(--accent-blue, #3b82f6);
+}
+.claude-md-save-btn.saved {
+  border-color: var(--accent-green, #22c55e);
+  color: var(--accent-green, #22c55e);
+}
+.claude-md-save-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Info banner */
+.claude-md-info {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  font-size: 11px;
+  color: var(--text-3);
+  background: var(--bg-0);
+  border-bottom: 1px solid var(--border-1);
+  flex-shrink: 0;
+}
+
+/* Error */
+.claude-md-error {
+  padding: 8px 14px;
+  font-size: 11.5px;
+  color: var(--accent-red, #ef4444);
+  background: rgba(239, 68, 68, 0.08);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+  flex-shrink: 0;
+}
+
+/* Loading */
+.claude-md-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+/* Editor */
+.claude-md-editor {
+  flex: 1;
+  width: 100%;
+  padding: 16px 18px;
+  background: var(--bg-0);
+  color: var(--text-1);
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  tab-size: 2;
+  -webkit-font-smoothing: antialiased;
+  overflow-y: auto;
+}
+.claude-md-editor::placeholder {
+  color: var(--text-3);
+  opacity: 0.6;
+}
+
+/* Empty State */
+.claude-md-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  text-align: center;
+  padding: 24px;
+}
+.claude-md-empty-icon {
+  color: var(--text-3);
+  opacity: 0.4;
+}
+.claude-md-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin: 0;
+}
+.claude-md-empty-sub {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.6;
+  margin: 0;
+}
+.claude-md-empty-sub code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-2);
+  padding: 1px 4px;
+  border-radius: 3px;
+}

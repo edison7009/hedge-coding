@@ -1,4 +1,4 @@
-// Budget Coder — Tree-sitter AST parser for symbol extraction
+// Hedge Coding — Tree-sitter AST parser for symbol extraction
 
 use anyhow::Result;
 use serde::Serialize;
@@ -19,6 +19,7 @@ pub struct Symbol {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum SymbolKind {
     Function,
+    Method,
     Class,
     Interface,
     TypeAlias,
@@ -27,14 +28,17 @@ pub enum SymbolKind {
     Trait,
     Impl,
     Constant,
+    #[allow(dead_code)]
     Export,
     Module,
+    Macro,
 }
 
 impl std::fmt::Display for SymbolKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             SymbolKind::Function => write!(f, "fn"),
+            SymbolKind::Method => write!(f, "method"),
             SymbolKind::Class => write!(f, "class"),
             SymbolKind::Interface => write!(f, "interface"),
             SymbolKind::TypeAlias => write!(f, "type"),
@@ -45,6 +49,7 @@ impl std::fmt::Display for SymbolKind {
             SymbolKind::Constant => write!(f, "const"),
             SymbolKind::Export => write!(f, "export"),
             SymbolKind::Module => write!(f, "mod"),
+            SymbolKind::Macro => write!(f, "macro"),
         }
     }
 }
@@ -57,8 +62,10 @@ pub fn extract_symbols(path: &Path, source: &str) -> Result<Vec<Symbol>> {
         .unwrap_or_default();
 
     match extension.as_str() {
-        "js" | "jsx" => extract_javascript_symbols(source),
-        "ts" | "tsx" => extract_typescript_symbols(source),
+        "js" => extract_javascript_symbols(source),
+        "jsx" => extract_jsx_symbols(source),
+        "ts" => extract_typescript_symbols(source),
+        "tsx" => extract_tsx_symbols(source),
         "py" => extract_python_symbols(source),
         "rs" => extract_rust_symbols(source),
         _ => {
@@ -85,7 +92,7 @@ fn extract_javascript_symbols(source: &str) -> Result<Vec<Symbol>> {
     Ok(symbols)
 }
 
-/// Extract symbols from TypeScript/TSX files
+/// Extract symbols from TypeScript files (.ts only)
 fn extract_typescript_symbols(source: &str) -> Result<Vec<Symbol>> {
     let mut parser = tree_sitter::Parser::new();
     let language = tree_sitter_typescript::LANGUAGE_TYPESCRIPT;
@@ -100,6 +107,31 @@ fn extract_typescript_symbols(source: &str) -> Result<Vec<Symbol>> {
     let mut symbols = Vec::new();
     collect_ts_symbols(&tree.root_node(), source, &mut symbols);
     Ok(symbols)
+}
+
+/// Extract symbols from TSX files (.tsx) — uses the TSX grammar
+/// which understands JSX syntax like <Component /> tags
+fn extract_tsx_symbols(source: &str) -> Result<Vec<Symbol>> {
+    let mut parser = tree_sitter::Parser::new();
+    let language = tree_sitter_typescript::LANGUAGE_TSX;
+    parser
+        .set_language(&language.into())
+        .map_err(|e| anyhow::anyhow!("Failed to set TSX language: {}", e))?;
+
+    let tree = parser
+        .parse(source, None)
+        .ok_or_else(|| anyhow::anyhow!("Failed to parse TSX"))?;
+
+    let mut symbols = Vec::new();
+    collect_ts_symbols(&tree.root_node(), source, &mut symbols);
+    Ok(symbols)
+}
+
+/// Extract symbols from JSX files (.jsx) — uses the JS grammar
+/// which should handle JSX in most tree-sitter JS grammars
+fn extract_jsx_symbols(source: &str) -> Result<Vec<Symbol>> {
+    // tree-sitter-javascript grammar handles JSX natively
+    extract_javascript_symbols(source)
 }
 
 /// Extract symbols from Python files
@@ -137,11 +169,13 @@ fn extract_rust_symbols(source: &str) -> Result<Vec<Symbol>> {
 }
 
 // ─── JavaScript symbol collection ────────────────────────────────────
+// Aligned with Aider's javascript-tags.scm for comprehensive capture
 
 fn collect_js_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Vec<Symbol>) {
     let kind = node.kind();
     match kind {
-        "function_declaration" => {
+        // Standard function declarations & generators
+        "function_declaration" | "generator_function_declaration" => {
             if let Some(name_node) = node.child_by_field_name("name") {
                 symbols.push(Symbol {
                     name: node_text(&name_node, source),
@@ -150,6 +184,17 @@ fn collect_js_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Vec<
                 });
             }
         }
+        // Named function expressions: const x = function myFn() {}
+        "function_expression" | "generator_function" => {
+            if let Some(name_node) = node.child_by_field_name("name") {
+                symbols.push(Symbol {
+                    name: node_text(&name_node, source),
+                    kind: SymbolKind::Function,
+                    line: node.start_position().row + 1,
+                });
+            }
+        }
+        // Class declarations (+ anonymous class expressions are skipped)
         "class_declaration" => {
             if let Some(name_node) = node.child_by_field_name("name") {
                 symbols.push(Symbol {
@@ -159,22 +204,94 @@ fn collect_js_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Vec<
                 });
             }
         }
+        "class" => {
+            // Named class expression: const X = class MyClass {}
+            if let Some(name_node) = node.child_by_field_name("name") {
+                symbols.push(Symbol {
+                    name: node_text(&name_node, source),
+                    kind: SymbolKind::Class,
+                    line: node.start_position().row + 1,
+                });
+            }
+        }
+        // Class methods: class Foo { bar() {} }
+        "method_definition" => {
+            if let Some(name_node) = node.child_by_field_name("name") {
+                let name = node_text(&name_node, source);
+                if name != "constructor" {
+                    symbols.push(Symbol {
+                        name,
+                        kind: SymbolKind::Method,
+                        line: node.start_position().row + 1,
+                    });
+                }
+            }
+        }
+        // Arrow functions and function expressions assigned to variables
+        // const handleClick = () => {} OR const render = function() {}
         "lexical_declaration" | "variable_declaration" => {
-            // Capture: const MyComponent = ..., export const X = ...
             for i in 0..node.named_child_count() {
                 if let Some(declarator) = node.named_child(i) {
                     if declarator.kind() == "variable_declarator" {
                         if let Some(name_node) = declarator.child_by_field_name("name") {
                             let name = node_text(&name_node, source);
-                            // Only capture PascalCase or UPPER_CASE names (components, constants)
-                            if is_important_name(&name) {
-                                symbols.push(Symbol {
-                                    name,
-                                    kind: SymbolKind::Constant,
-                                    line: declarator.start_position().row + 1,
-                                });
+                            if let Some(value_node) = declarator.child_by_field_name("value") {
+                                let vk = value_node.kind();
+                                if vk == "arrow_function" || vk == "function_expression" || vk == "generator_function" {
+                                    symbols.push(Symbol {
+                                        name,
+                                        kind: SymbolKind::Function,
+                                        line: declarator.start_position().row + 1,
+                                    });
+                                } else if is_important_name(&name) {
+                                    // PascalCase/UPPER_CASE constants
+                                    symbols.push(Symbol {
+                                        name,
+                                        kind: SymbolKind::Constant,
+                                        line: declarator.start_position().row + 1,
+                                    });
+                                }
                             }
                         }
+                    }
+                }
+            }
+        }
+        // Assignment-style: module.exports.fn = () => {}
+        "assignment_expression" => {
+            if let Some(right) = node.child_by_field_name("right") {
+                let rk = right.kind();
+                if rk == "arrow_function" || rk == "function_expression" {
+                    if let Some(left) = node.child_by_field_name("left") {
+                        let name = match left.kind() {
+                            "identifier" => Some(node_text(&left, source)),
+                            "member_expression" => {
+                                left.child_by_field_name("property").map(|p| node_text(&p, source))
+                            }
+                            _ => None,
+                        };
+                        if let Some(n) = name {
+                            symbols.push(Symbol {
+                                name: n,
+                                kind: SymbolKind::Function,
+                                line: node.start_position().row + 1,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        // Object property shorthand: { handleClick() {} } or { render: () => {} }
+        "pair" => {
+            if let Some(value) = node.child_by_field_name("value") {
+                let vk = value.kind();
+                if vk == "arrow_function" || vk == "function_expression" {
+                    if let Some(key) = node.child_by_field_name("key") {
+                        symbols.push(Symbol {
+                            name: node_text(&key, source),
+                            kind: SymbolKind::Function,
+                            line: node.start_position().row + 1,
+                        });
                     }
                 }
             }
@@ -194,10 +311,12 @@ fn collect_js_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Vec<
 }
 
 // ─── TypeScript symbol collection ────────────────────────────────────
+// Aligned with Aider's typescript-tags.scm for comprehensive capture
 
 fn collect_ts_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Vec<Symbol>) {
     let kind = node.kind();
     match kind {
+        // Standard and signature-only function declarations
         "function_declaration" | "function_signature" => {
             if let Some(name_node) = node.child_by_field_name("name") {
                 symbols.push(Symbol {
@@ -207,7 +326,8 @@ fn collect_ts_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Vec<
                 });
             }
         }
-        "class_declaration" => {
+        // Class declarations (concrete + abstract)
+        "class_declaration" | "abstract_class_declaration" => {
             if let Some(name_node) = node.child_by_field_name("name") {
                 symbols.push(Symbol {
                     name: node_text(&name_node, source),
@@ -216,6 +336,7 @@ fn collect_ts_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Vec<
                 });
             }
         }
+        // Interface declarations
         "interface_declaration" => {
             if let Some(name_node) = node.child_by_field_name("name") {
                 symbols.push(Symbol {
@@ -225,6 +346,7 @@ fn collect_ts_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Vec<
                 });
             }
         }
+        // Type aliases
         "type_alias_declaration" => {
             if let Some(name_node) = node.child_by_field_name("name") {
                 symbols.push(Symbol {
@@ -234,6 +356,7 @@ fn collect_ts_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Vec<
                 });
             }
         }
+        // Enums
         "enum_declaration" => {
             if let Some(name_node) = node.child_by_field_name("name") {
                 symbols.push(Symbol {
@@ -243,18 +366,63 @@ fn collect_ts_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Vec<
                 });
             }
         }
+        // Class methods: class Foo { bar() {} }
+        "method_definition" => {
+            if let Some(name_node) = node.child_by_field_name("name") {
+                let name = node_text(&name_node, source);
+                if name != "constructor" {
+                    symbols.push(Symbol {
+                        name,
+                        kind: SymbolKind::Method,
+                        line: node.start_position().row + 1,
+                    });
+                }
+            }
+        }
+        // Interface method signatures: interface Foo { bar(): void }
+        "method_signature" | "abstract_method_signature" => {
+            if let Some(name_node) = node.child_by_field_name("name") {
+                symbols.push(Symbol {
+                    name: node_text(&name_node, source),
+                    kind: SymbolKind::Method,
+                    line: node.start_position().row + 1,
+                });
+            }
+        }
+        // Module declarations: module Foo {}
+        "module" => {
+            if let Some(name_node) = node.child_by_field_name("name") {
+                if name_node.kind() == "identifier" {
+                    symbols.push(Symbol {
+                        name: node_text(&name_node, source),
+                        kind: SymbolKind::Module,
+                        line: node.start_position().row + 1,
+                    });
+                }
+            }
+        }
+        // Arrow functions and function expressions assigned to variables
         "lexical_declaration" | "variable_declaration" => {
             for i in 0..node.named_child_count() {
                 if let Some(declarator) = node.named_child(i) {
                     if declarator.kind() == "variable_declarator" {
                         if let Some(name_node) = declarator.child_by_field_name("name") {
                             let name = node_text(&name_node, source);
-                            if is_important_name(&name) {
-                                symbols.push(Symbol {
-                                    name,
-                                    kind: SymbolKind::Constant,
-                                    line: declarator.start_position().row + 1,
-                                });
+                            if let Some(value_node) = declarator.child_by_field_name("value") {
+                                let vk = value_node.kind();
+                                if vk == "arrow_function" || vk == "function_expression" {
+                                    symbols.push(Symbol {
+                                        name,
+                                        kind: SymbolKind::Function,
+                                        line: declarator.start_position().row + 1,
+                                    });
+                                } else if is_important_name(&name) {
+                                    symbols.push(Symbol {
+                                        name,
+                                        kind: SymbolKind::Constant,
+                                        line: declarator.start_position().row + 1,
+                                    });
+                                }
                             }
                         }
                     }
@@ -308,15 +476,25 @@ fn collect_python_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut 
 }
 
 // ─── Rust symbol collection ──────────────────────────────────────────
+// Aligned with Aider's rust-tags.scm for comprehensive capture
 
 fn collect_rust_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Vec<Symbol>) {
+    collect_rust_symbols_inner(node, source, symbols, false);
+}
+
+fn collect_rust_symbols_inner(
+    node: &tree_sitter::Node,
+    source: &str,
+    symbols: &mut Vec<Symbol>,
+    inside_impl: bool,
+) {
     let kind = node.kind();
     match kind {
         "function_item" => {
             if let Some(name_node) = node.child_by_field_name("name") {
                 symbols.push(Symbol {
                     name: node_text(&name_node, source),
-                    kind: SymbolKind::Function,
+                    kind: if inside_impl { SymbolKind::Method } else { SymbolKind::Function },
                     line: node.start_position().row + 1,
                 });
             }
@@ -339,6 +517,24 @@ fn collect_rust_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Ve
                 });
             }
         }
+        "union_item" => {
+            if let Some(name_node) = node.child_by_field_name("name") {
+                symbols.push(Symbol {
+                    name: node_text(&name_node, source),
+                    kind: SymbolKind::Struct, // Union is treated as struct-like ADT
+                    line: node.start_position().row + 1,
+                });
+            }
+        }
+        "type_item" => {
+            if let Some(name_node) = node.child_by_field_name("name") {
+                symbols.push(Symbol {
+                    name: node_text(&name_node, source),
+                    kind: SymbolKind::TypeAlias,
+                    line: node.start_position().row + 1,
+                });
+            }
+        }
         "trait_item" => {
             if let Some(name_node) = node.child_by_field_name("name") {
                 symbols.push(Symbol {
@@ -356,6 +552,13 @@ fn collect_rust_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Ve
                     line: node.start_position().row + 1,
                 });
             }
+            // Recurse into impl body with inside_impl = true
+            for i in 0..node.child_count() {
+                if let Some(child) = node.child(i) {
+                    collect_rust_symbols_inner(&child, source, symbols, true);
+                }
+            }
+            return; // Already recursed, skip default recursion
         }
         "const_item" | "static_item" => {
             if let Some(name_node) = node.child_by_field_name("name") {
@@ -375,14 +578,23 @@ fn collect_rust_symbols(node: &tree_sitter::Node, source: &str, symbols: &mut Ve
                 });
             }
         }
+        "macro_definition" => {
+            if let Some(name_node) = node.child_by_field_name("name") {
+                symbols.push(Symbol {
+                    name: node_text(&name_node, source),
+                    kind: SymbolKind::Macro,
+                    line: node.start_position().row + 1,
+                });
+            }
+        }
         _ => {}
     }
 
-    // Recurse into top-level items and impl blocks
-    if kind == "source_file" || kind == "impl_item" || kind == "mod_item" {
+    // Recurse into top-level items and mod blocks
+    if kind == "source_file" || kind == "mod_item" || kind == "declaration_list" {
         for i in 0..node.child_count() {
             if let Some(child) = node.child(i) {
-                collect_rust_symbols(&child, source, symbols);
+                collect_rust_symbols_inner(&child, source, symbols, inside_impl);
             }
         }
     }

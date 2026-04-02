@@ -1,11 +1,15 @@
-// Budget Coder — A Prompt Compiler for AI Coding Assistants
+// Hedge Coding — A Prompt Compiler for AI Coding Assistants
 // "Let cheap models read your code, let expensive models write code."
 
+mod analyzer;
 mod compiler;
 mod config;
+mod git_intel;
 mod parser;
 mod repo_map;
 mod scanner;
+mod watcher;
+
 mod server;
 mod token_counter;
 
@@ -16,9 +20,9 @@ use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(
-    name = "budget-coder",
-    about = "A Prompt Compiler — scan your codebase, generate a Super Prompt for expensive AI models",
-    long_about = "Budget Coder scans your local codebase using Tree-sitter, generates a compact Repo Map,\n\
+    name = "hedge-coding",
+    about = "A Prompt Compiler — hedge your AI coding costs by scanning with cheap models and writing with expensive ones",
+    long_about = "Hedge Coding scans your local codebase using Tree-sitter, generates a compact Repo Map,\n\
                   and compiles a structured Super Prompt (XML) containing only the relevant files.\n\n\
                   Use a cheap/fast model to analyze → then paste the Super Prompt into an expensive model.",
     version
@@ -62,13 +66,22 @@ struct Cli {
 }
 
 fn main() -> Result<()> {
-    let cli = Cli::parse();
+    let mut args: Vec<String> = std::env::args().collect();
+    
+    // Auto-detect Desktop Mode:
+    // If double-clicked or run without task arguments (e.g., from Tauri dev/build),
+    // default to UI mode so the desktop software opens natively.
+    if args.len() <= 1 {
+        args.push("--ui".to_string());
+    }
+
+    let cli = Cli::parse_from(args);
 
     // ─── Web UI mode ───
     if cli.ui {
         println!(
             "\n  {} {}",
-            "Budget Coder".bright_cyan().bold(),
+            "Hedge Coding".bright_cyan().bold(),
             format!("v{}", env!("CARGO_PKG_VERSION")).dimmed()
         );
         println!(
@@ -81,7 +94,7 @@ fn main() -> Result<()> {
     // Banner
     println!(
         "\n  {} {}",
-        "Budget Coder".bright_cyan().bold(),
+        "Hedge Coding".bright_cyan().bold(),
         format!("v{}", env!("CARGO_PKG_VERSION")).dimmed()
     );
     println!(
@@ -183,8 +196,12 @@ fn main() -> Result<()> {
         goal,
         selected_files: &selected_files,
         repo_map: &repo_map,
-        checklist: None,      // Phase 3: LLM-generated
-        skills_context: None,  // Phase 3: Skills injection
+        checklist: None,
+        skills_context: None,
+        claude_md: None,
+        file_summaries: None,
+        git_diff: None,
+        task_instructions: None,
     };
 
     let super_prompt = compiler::compile(&options)?;
