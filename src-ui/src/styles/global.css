@@ -815,7 +815,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding-bottom: 16px; /* 增加底部留白避免贴底 */
 }
 
 /* Model Card */
