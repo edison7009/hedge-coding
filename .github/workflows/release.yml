@@ -10,12 +10,29 @@ permissions:
   contents: write
 
 jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create-release.outputs.id }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Create Release
+        id: create-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: hedge-coding-${{ github.ref_name }}
+          name: "Hedge Coding ${{ github.ref_name }}"
+          body: "Automated standard release. See assets below for installers."
+          draft: false
+          prerelease: false
+
   release:
+    needs: create-release
     strategy:
       fail-fast: false
       matrix:
         platform: [macos-latest, ubuntu-22.04, windows-latest]
-
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
@@ -45,13 +62,9 @@ jobs:
         working-directory: ./src-ui
         run: npm run build
 
-      - name: Build and create release
+      - name: Build and upload Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: hedge-coding-${{ github.ref_name }} # e.g. hedge-coding-v0.1.0
-          releaseName: "Hedge Coding ${{ github.ref_name }}"
-          releaseBody: "Automated standard release. See assets below for installers."
-          releaseDraft: false
-          prerelease: false
+          releaseId: ${{ needs.create-release.outputs.release_id }}
