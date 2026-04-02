@@ -94,6 +94,7 @@ export const en = {
   'superprompt.instructions': 'Instructions',
   'superprompt.context_hint': '+ Repo Map and File Context attached. Copy to view full output.',
   'superprompt.copied': 'Copied',
+  'copy.xml': 'Copy .XML',
 } as const;
 
 export type I18nKey = keyof typeof en;

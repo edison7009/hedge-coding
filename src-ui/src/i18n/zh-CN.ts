@@ -29,7 +29,7 @@ export const zhCN = {
   'budget.model': '廉价模型',
   'payload.estimation': '负载估算',
   'tokens': 'Token',
-  'copy.xml': '复制',
+  'copy.xml': '复制 .XML',
   'compiler.scan_required': '需先分析',
   'compiler.waiting': '就绪',
   'compiler.building': '构建中...',

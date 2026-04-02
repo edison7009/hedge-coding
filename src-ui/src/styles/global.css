@@ -120,7 +120,7 @@
     --glass-blur: blur(24px);
 }
 
-/* ─── Light Theme (Native iOS Style) ─────────────────── */
+/* ─── Light Theme (Native iOS Style base, adapted with Hedge Coffee) ─── */
 [data-theme="light"] {
     --bg-app: #f2f2f7;
     --bg-panel: rgba(255, 255, 255, 0.85);
@@ -132,20 +132,20 @@
 
     --border: rgba(60, 60, 67, 0.12);
     --border-input: rgba(60, 60, 67, 0.18);
-    --border-focus: #007aff;
+    --border-focus: rgba(196, 149, 106, 0.5);
 
     --text-1: #000000;
     --text-2: rgba(60, 60, 67, 0.6);
     --text-3: #8e8e93;
 
-    --accent: #007aff;
-    --accent-hover: #006ae6;
-    --accent-active: #005ecf;
-    --accent-bg: rgba(0, 122, 255, 0.1);
+    --accent: #c4956a;
+    --accent-hover: #b5865c;
+    --accent-active: #a1724d;
+    --accent-bg: rgba(196, 149, 106, 0.12);
 
     --green: #34c759;
     --red: #ff3b30;
-    --blue: #007aff;
+    --blue: #78a8d4;
 
     --shadow-panel: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
     --glass-blur: blur(24px);
