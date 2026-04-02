@@ -26,10 +26,11 @@ try {
     Write-Host "📦 Downloading (this may take a minute): $downloadUrl" -ForegroundColor Cyan
     Invoke-WebRequest -Uri $downloadUrl -OutFile $tempFile
 
-    Write-Host "🔧 Launching installer..." -ForegroundColor Green
-    Start-Process -FilePath $tempFile -Wait
+    Write-Host "🔧 Installing in background (Silent Mode)..." -ForegroundColor Green
+    # Add /S to run the NSIS installer silently
+    Start-Process -FilePath $tempFile -ArgumentList "/S" -Wait
 
-    Write-Host "✅ Installation complete! You can launch Hedge Coding from your desktop." -ForegroundColor Green
+    Write-Host "✅ Installation complete! You can launch Hedge Coding from your start menu or desktop." -ForegroundColor Green
 } catch {
     Write-Host "❌ Failed to fetch the latest release. It may not be published yet." -ForegroundColor Red
     Write-Host "🚧 Please follow the 'Build from Source' instructions in the README for now." -ForegroundColor Yellow
