@@ -2,12 +2,12 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Hedge Coding",
   "version": "0.1.0",
-  "identifier": "com.hedgecoding.app",
+  "identifier": "com.hedgecoding.desktop",
   "build": {
     "frontendDist": "./src-ui/dist",
     "devUrl": "http://localhost:5173",
-    "beforeBuildCommand": "",
-    "beforeDevCommand": ""
+    "beforeBuildCommand": "npm run build --prefix src-ui",
+    "beforeDevCommand": "npm run dev --prefix src-ui"
   },
 
   "app": {
