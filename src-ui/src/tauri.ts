@@ -104,7 +104,10 @@ export interface CompileResult {
 
 export interface ModelConfig {
   name: string;
+  model_id: string;
   base_url: string;
+  /** true when an API key is present in models.json */
+  configured: boolean;
 }
 
 export interface GitStatusResponse {

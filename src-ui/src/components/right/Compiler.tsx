@@ -214,33 +214,35 @@ export function Compiler() {
 
   return (
     <div className="compiler-top">
-      {/* 1. Budget Model */}
-      <div className="model-card new-model-card">
-        <div className="model-icon-bare">
-          {iconFile ? (
-            <img 
-              src={`/models/${iconFile}`} 
-              alt="model-icon" 
-              className="model-icon-big"
-              onError={(e) => {
-                const t = e.target as HTMLImageElement;
-                t.style.display = 'none';
-                if (t.parentElement) t.parentElement.innerText = brandInitial;
-              }}
-            />
-          ) : (
-            <span className="model-icon-fallback">{brandInitial}</span>
-          )}
-        </div>
-        <div className="model-info">
-          <div className="model-head">
-            <span id="model-name">{state.modelConfig?.name ?? '—'}</span>
+      {/* 1. Budget Model — only render when a model is actually configured */}
+      {state.modelConfig?.configured && (
+        <div className="model-card new-model-card">
+          <div className="model-icon-bare">
+            {iconFile ? (
+              <img
+                src={`/models/${iconFile}`}
+                alt="model-icon"
+                className="model-icon-big"
+                onError={(e) => {
+                  const t = e.target as HTMLImageElement;
+                  t.style.display = 'none';
+                  if (t.parentElement) t.parentElement.innerText = brandInitial;
+                }}
+              />
+            ) : (
+              <span className="model-icon-fallback">{brandInitial}</span>
+            )}
           </div>
-          {endpoint && (
-            <div className="model-endpoint">{endpoint}</div>
-          )}
+          <div className="model-info">
+            <div className="model-head">
+              <span id="model-name">{state.modelConfig.name}</span>
+            </div>
+            {endpoint && (
+              <div className="model-endpoint">{endpoint}</div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 2. Cost Tracker (Hedge Ledger) */}
       <div className="cost-card yield-card">
