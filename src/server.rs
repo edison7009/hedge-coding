@@ -230,7 +230,7 @@ fn compile_prompt(
     }).filter(|s| !s.is_empty());
 
     let target_files = match analyzer::read_model_config(&dir) {
-        Ok((model_id, base_url, api_key)) => {
+        Ok((model_id, base_url, api_key, anthropic_url)) => {
             eprintln!("  [HC] Classifying task and refining goal...");
             match analyzer::classify_and_refine(
                 &goal,
@@ -238,6 +238,7 @@ fn compile_prompt(
                 &model_id,
                 &base_url,
                 &api_key,
+                &anthropic_url,
                 skills_meta_text.as_deref(),
             ) {
                 Ok(classification) => {
@@ -592,7 +593,7 @@ struct AnalysisProgress {
 #[tauri::command]
 fn check_model_config(state: State<'_, AppState>) -> Result<String, String> {
     let dir = state.project_dir.lock().map_err(|e| e.to_string())?;
-    analyzer::read_model_config(&dir).map(|(model_id, base_url, _)| {
+    analyzer::read_model_config(&dir).map(|(model_id, base_url, _, _)| {
         format!("{} @ {}", model_id, base_url)
     })
 }
@@ -615,7 +616,7 @@ async fn deep_analyze(
     let dir = state.project_dir.lock().map_err(|e| e.to_string())?.clone();
 
     // Validate model config before starting (fast disk read, OK on async thread)
-    let (model_id, base_url, api_key) = analyzer::read_model_config(&dir)?;
+    let (model_id, base_url, api_key, anthropic_url) = analyzer::read_model_config(&dir)?;
 
     // Rest reset cancel token before starting a new run
     state.analysis_cancelled.store(false, std::sync::atomic::Ordering::Relaxed);
@@ -664,8 +665,9 @@ async fn deep_analyze(
         let mi = model_id.clone();
         let bu = base_url.clone();
         let ak = api_key.clone();
+        let au = anthropic_url.clone();
         let result: Result<(String, analyzer::TokenUsage), String> = tauri::async_runtime::spawn_blocking(move || {
-            analyzer::summarize_file(&rp, &content, &mi, &bu, &ak)
+            analyzer::summarize_file(&rp, &content, &mi, &bu, &ak, &au)
         })
         .await
         .map_err(|e| format!("Task join error: {}", e))?;

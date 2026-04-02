@@ -25,6 +25,10 @@ struct ModelConfig {
     base_url: String,
     #[serde(rename = "apiKey", default)]
     api_key: String,
+    /// Optional Anthropic-compatible base URL (e.g. MiniMax /anthropic endpoint).
+    /// When present, requests use the Anthropic Messages API format instead of OpenAI.
+    #[serde(rename = "anthropicUrl", default)]
+    anthropic_url: String,
 }
 
 // ─── OpenAI-compat request/response types ────────────
@@ -61,6 +65,146 @@ struct ChatChoice {
     message: ChatMessage,
 }
 
+// ─── Anthropic Messages API types ────────────────────
+
+#[derive(Serialize)]
+struct AnthropicRequest {
+    model: String,
+    max_tokens: u32,
+    messages: Vec<ChatMessage>,
+}
+
+#[derive(Deserialize)]
+struct AnthropicResponse {
+    content: Vec<AnthropicContent>,
+    usage: Option<AnthropicUsage>,
+}
+
+#[derive(Deserialize)]
+struct AnthropicContent {
+    text: String,
+}
+
+#[derive(Deserialize)]
+struct AnthropicUsage {
+    input_tokens: Option<u32>,
+    output_tokens: Option<u32>,
+}
+
+// ─── Unified model call ───────────────────────────────
+
+/// Call the configured model with a prompt, auto-selecting OpenAI or Anthropic format.
+/// Returns (response_text, input_tokens, output_tokens).
+fn call_model(
+    prompt: &str,
+    model_id: &str,
+    base_url: &str,
+    api_key: &str,
+    anthropic_url: &str,
+    max_tokens: u32,
+    timeout_secs: u64,
+) -> Result<(String, u32, u32), String> {
+    let est_input = ((prompt.len() + 40) / 4) as u32;
+
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(timeout_secs))
+        .build()
+        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+
+    let messages = vec![ChatMessage {
+        role: "user".to_string(),
+        content: prompt.to_string(),
+    }];
+
+    if !anthropic_url.is_empty() {
+        // ── Anthropic Messages API ───────────────────────
+        let endpoint = format!("{}/v1/messages", anthropic_url.trim_end_matches('/'));
+        let req = AnthropicRequest {
+            model: model_id.to_string(),
+            max_tokens,
+            messages,
+        };
+        let response = client
+            .post(&endpoint)
+            .header("x-api-key", api_key)
+            .header("anthropic-version", "2023-06-01")
+            .header("Content-Type", "application/json")
+            .json(&req)
+            .send()
+            .map_err(|e| {
+                if e.is_timeout() { "Model timeout — no response after set duration".to_string() }
+                else if e.is_connect() { "Network error — cannot reach Anthropic API".to_string() }
+                else { format!("Request failed: {}", e) }
+            })?;
+
+        if !response.status().is_success() {
+            let status = response.status().as_u16();
+            let body = response.text().unwrap_or_default();
+            if status == 401 || status == 403 {
+                return Err("API key rejected — check your key in models.json".to_string());
+            }
+            return Err(format!("Anthropic API error {}: {}", status, &body[..body.len().min(200)]));
+        }
+
+        let resp: AnthropicResponse = response
+            .json()
+            .map_err(|e| format!("Invalid Anthropic response format: {}", e))?;
+
+        let text = resp.content.into_iter().next()
+            .map(|c| c.text.trim().to_string())
+            .unwrap_or_else(|| "No response returned".to_string());
+
+        let in_tok = resp.usage.as_ref().and_then(|u| u.input_tokens).unwrap_or(est_input);
+        let out_tok = resp.usage.as_ref().and_then(|u| u.output_tokens)
+            .unwrap_or_else(|| (text.len() / 4) as u32);
+
+        Ok((text, in_tok, out_tok))
+    } else {
+        // ── OpenAI-compat Chat Completions API ───────────
+        let endpoint = format!("{}/chat/completions", base_url.trim_end_matches('/'));
+        let req = ChatRequest {
+            model: model_id.to_string(),
+            messages,
+            max_tokens,
+            temperature: 0.0,
+        };
+        let response = client
+            .post(&endpoint)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .header("Content-Type", "application/json")
+            .json(&req)
+            .send()
+            .map_err(|e| {
+                if e.is_timeout() { "Model timeout — no response after set duration".to_string() }
+                else if e.is_connect() { "Network error — cannot reach model API".to_string() }
+                else { format!("Request failed: {}", e) }
+            })?;
+
+        if !response.status().is_success() {
+            let status = response.status().as_u16();
+            let body = response.text().unwrap_or_default();
+            if status == 401 || status == 403 {
+                return Err("API key rejected — check your key in models.json".to_string());
+            }
+            return Err(format!("API error {}: {}", status, &body[..body.len().min(200)]));
+        }
+
+        let resp: ChatResponse = response
+            .json()
+            .map_err(|e| format!("Invalid API response format: {}", e))?;
+
+        let text = resp.choices.into_iter().next()
+            .map(|c| c.message.content.trim().to_string())
+            .unwrap_or_else(|| "No summary returned".to_string());
+
+        let in_tok = resp.usage.as_ref().and_then(|u| u.prompt_tokens).unwrap_or(est_input);
+        let out_tok = resp.usage.as_ref().and_then(|u| u.completion_tokens)
+            .unwrap_or_else(|| (text.len() / 4) as u32);
+
+        Ok((text, in_tok, out_tok))
+    }
+}
+
 /// Token usage for a single summarize_file call.
 pub struct TokenUsage {
     pub input_tokens: u32,
@@ -69,9 +213,10 @@ pub struct TokenUsage {
 
 // ─── Public API ───────────────────────────────────────
 
-/// Read models.json from the project directory and validate it has an API key.
-/// Returns (model_id, base_url, api_key) or an error message.
-pub fn read_model_config(_project_dir: &PathBuf) -> Result<(String, String, String), String> {
+/// Read models.json from the user's ~/.HedgeCoding/models.json.
+/// Returns (model_id, base_url, api_key, anthropic_url) or an error message.
+/// anthropic_url is empty string when not configured (use OpenAI-compat format).
+pub fn read_model_config(_project_dir: &PathBuf) -> Result<(String, String, String, String), String> {
     let models_path = dirs::home_dir()
         .ok_or_else(|| "Cannot determine home directory".to_string())?
         .join(".HedgeCoding")
@@ -97,10 +242,10 @@ pub fn read_model_config(_project_dir: &PathBuf) -> Result<(String, String, Stri
         return Err("Budget model API key is not configured in models.json".to_string());
     }
 
-    Ok((cfg.model_id, cfg.base_url, cfg.api_key))
+    Ok((cfg.model_id, cfg.base_url, cfg.api_key, cfg.anthropic_url))
 }
 
-/// Summarize a single file's content using the cheap model.
+/// Summarize a single file's content using the configured model, supporting Anthropic URL.
 /// Returns (summary, TokenUsage) or an error.
 pub fn summarize_file(
     filename: &str,
@@ -108,6 +253,7 @@ pub fn summarize_file(
     model_id: &str,
     base_url: &str,
     api_key: &str,
+    anthropic_url: &str,
 ) -> Result<(String, TokenUsage), String> {
     // Truncate very large files to keep cost low (~4K bytes ≈ ~1K tokens).
     let truncated = if content.len() > 4000 {
@@ -125,86 +271,16 @@ pub fn summarize_file(
         filename, truncated
     );
 
-    // Estimate input tokens before the call (fallback if API doesn't return usage)
-    let est_input = ((prompt.len() + 40) / 4) as u32; // +40 for system overhead
+    let (raw, in_tok, out_tok) = call_model(
+        &prompt, model_id, base_url, api_key, anthropic_url, 120, 30
+    )?;
 
-    let request = ChatRequest {
-        model: model_id.to_string(),
-        messages: vec![
-            ChatMessage {
-                role: "user".to_string(),
-                content: prompt,
-            }
-        ],
-        max_tokens: 120,
-        temperature: 0.0,
-    };
+    let summary = strip_think_tags(&raw);
 
-    let endpoint = format!("{}/chat/completions", base_url.trim_end_matches('/'));
-
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
-
-    let response = client
-        .post(&endpoint)
-        .header("Authorization", format!("Bearer {}", api_key))
-        .header("Content-Type", "application/json")
-        .json(&request)
-        .send()
-        .map_err(|e| {
-            if e.is_timeout() { "Model timeout — no response after 30s".to_string() }
-            else if e.is_connect() { "Network error — cannot reach model API".to_string() }
-            else { format!("Request failed: {}", e) }
-        })?;
-
-    if !response.status().is_success() {
-        let status = response.status().as_u16();
-        let body = response.text().unwrap_or_default();
-        if status == 401 || status == 403 {
-            return Err("API key rejected — check your key in models.json".to_string());
-        }
-        return Err(format!("API error {}: {}", status, &body[..body.len().min(200)]));
-    }
-
-    let chat_resp: ChatResponse = response
-        .json()
-        .map_err(|e| format!("Invalid API response format: {}", e))?;
-
-    // Prefer real usage from API, fall back to estimate
-    let usage = TokenUsage {
-        input_tokens: chat_resp.usage
-            .as_ref()
-            .and_then(|u| u.prompt_tokens)
-            .unwrap_or(est_input),
-        output_tokens: chat_resp.usage
-            .as_ref()
-            .and_then(|u| u.completion_tokens)
-            .unwrap_or(0),
-    };
-
-    let summary = chat_resp
-        .choices
-        .into_iter()
-        .next()
-        .map(|c| c.message.content.trim().to_string())
-        .unwrap_or_else(|| "No summary returned".to_string());
-
-    // Estimate output tokens from actual summary length
-    let usage = TokenUsage {
-        output_tokens: if usage.output_tokens == 0 {
-            (summary.len() / 4) as u32
-        } else {
-            usage.output_tokens
-        },
-        ..usage
-    };
-
-    // Strip CoT reasoning tags (DeepSeek-R1 / Minimax output)
-    let summary = strip_think_tags(&summary);
-
-    Ok((summary, usage))
+    Ok((summary, TokenUsage {
+        input_tokens: in_tok,
+        output_tokens: if out_tok == 0 { (raw.len() / 4) as u32 } else { out_tok },
+    }))
 }
 
 /// Ask the budget model to select the most relevant files for a given goal.
@@ -319,6 +395,7 @@ pub fn classify_and_refine(
     model_id: &str,
     base_url: &str,
     api_key: &str,
+    anthropic_url: &str,
     skills_meta: Option<&str>,
 ) -> Result<TaskClassification, String> {
     // Build the optional skills section of the prompt
@@ -369,45 +446,9 @@ pub fn classify_and_refine(
         skills_section, example_json, goal, repo_map
     );
 
-    let request = ChatRequest {
-        model: model_id.to_string(),
-        messages: vec![ChatMessage {
-            role: "user".to_string(),
-            content: prompt,
-        }],
-        max_tokens: 2500,
-        temperature: 0.0,
-    };
-
-    let endpoint = format!("{}/chat/completions", base_url.trim_end_matches('/'));
-
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()
-        .map_err(|e| format!("HTTP client error: {}", e))?;
-
-    let response = client
-        .post(&endpoint)
-        .header("Authorization", format!("Bearer {}", api_key))
-        .header("Content-Type", "application/json")
-        .json(&request)
-        .send()
-        .map_err(|e| format!("Classify request failed: {}", e))?;
-
-    if !response.status().is_success() {
-        return Err(format!("Classify API error: {}", response.status()));
-    }
-
-    let chat_resp: ChatResponse = response
-        .json()
-        .map_err(|e| format!("Invalid classify response: {}", e))?;
-
-    let raw = chat_resp
-        .choices
-        .into_iter()
-        .next()
-        .map(|c| c.message.content.trim().to_string())
-        .unwrap_or_default();
+    let (raw, _, _) = call_model(
+        &prompt, model_id, base_url, api_key, anthropic_url, 2500, 30
+    ).map_err(|e| format!("Classify request failed: {}", e))?;
 
     // Strip CoT reasoning tags
     let cleaned = strip_think_tags(&raw);
