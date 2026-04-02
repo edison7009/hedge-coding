@@ -2,7 +2,7 @@
   <img src="logo.png" width="80" alt="Hedge Coding" />
 </p>
 
-<h1 align="center">Hedge Coding</h1>
+<h1 align="center" style="border-bottom: none">Hedge Coding</h1>
 
 <p align="center">
   <strong>The Super Prompt Compiler for AI Coding.</strong>
@@ -25,8 +25,6 @@
   <a href="#roadmap">Roadmap</a> •
   <a href="./README.zh-CN.md">🇨🇳 中文文档</a>
 </p>
-
----
 
 ## The Hedge Philosophy
 

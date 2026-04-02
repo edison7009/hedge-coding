@@ -2,7 +2,7 @@
   <img src="logo.png" width="80" alt="Hedge Coding" />
 </p>
 
-<h1 align="center">Hedge Coding</h1>
+<h1 align="center" style="border-bottom: none">Hedge Coding</h1>
 
 <p align="center">
   <strong>AI 编程的超级提示词编译器。</strong>
@@ -25,8 +25,6 @@
   <a href="#开发路线">开发路线</a> •
   <a href="./README.md">🇺🇸 English</a>
 </p>
-
----
 
 ## 对冲哲学
 
