@@ -36,6 +36,8 @@ A frontier model starved of context degrades to below-baseline performance. A mi
 
 Hedge Coding is architected around this single constraint: **maximize context precision before a single inference token is spent**.
 
+Standard AI coding assistants burn **~70% of tokens on blind exploration** — scanning directories, re-reading files, building context from scratch. That's not investing, that's gambling.
+
 ### The Three-Phase Pipeline
 
 | Phase | Role | What Happens | Cost |
