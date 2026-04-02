@@ -5,10 +5,12 @@ on:
     tags:
       - "v*"
 
+# 全局开启读写权限
+permissions:
+  contents: write
+
 jobs:
   release:
-    permissions:
-      contents: write
     strategy:
       fail-fast: false
       matrix:
