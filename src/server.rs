@@ -1017,19 +1017,25 @@ fn parse_frontmatter(content: &str) -> (std::collections::HashMap<String, String
 #[tauri::command]
 fn open_skills_dir(state: State<'_, AppState>) -> Result<(), String> {
     let dir = state.project_dir.lock().map_err(|e| e.to_string())?;
-    let skills_dir = dir.join(".hedgecoding").join("skills");
-    if !skills_dir.exists() {
-        std::fs::create_dir_all(&skills_dir).map_err(|e| e.to_string())?;
+    let mut target_dir = dir.join(".hedgecoding").join("skills");
+    if !target_dir.exists() {
+        if let Err(_) = std::fs::create_dir_all(&target_dir) {
+            // Fallback to global if local fails (e.g. Access Denied)
+            if let Some(home) = dirs::home_dir() {
+                target_dir = home.join(".HedgeCoding").join("skills");
+                let _ = std::fs::create_dir_all(&target_dir);
+            }
+        }
     }
     
     #[cfg(target_os = "windows")]
-    let _ = std::process::Command::new("explorer").arg(&skills_dir).spawn();
+    let _ = std::process::Command::new("explorer").arg(&target_dir).spawn();
 
     #[cfg(target_os = "macos")]
-    let _ = std::process::Command::new("open").arg(&skills_dir).spawn();
+    let _ = std::process::Command::new("open").arg(&target_dir).spawn();
 
     #[cfg(target_os = "linux")]
-    let _ = std::process::Command::new("xdg-open").arg(&skills_dir).spawn();
+    let _ = std::process::Command::new("xdg-open").arg(&target_dir).spawn();
 
     Ok(())
 }
@@ -1037,20 +1043,21 @@ fn open_skills_dir(state: State<'_, AppState>) -> Result<(), String> {
 #[tauri::command]
 fn list_skills(state: State<'_, AppState>) -> Result<Vec<SkillMeta>, String> {
     let dir = state.project_dir.lock().map_err(|e| e.to_string())?;
-    let skills_dir = dir.join(".hedgecoding").join("skills");
 
-    if !skills_dir.exists() {
-        // Try to auto-seed default skills on first access for the project
-        if let Err(e) = std::fs::create_dir_all(&skills_dir) {
-            // If we don't have permission (e.g. read-only file system or OS Error 5), just return empty silently
-            eprintln!("[HC] Could not seed skills dir: {}", e);
-            return Ok(vec![]);
-        }
+    let mut skills = vec![];
+    let mut seen_ids = std::collections::HashSet::new();
+    let mut dirs_to_scan = vec![];
 
-        let default_skills = vec![
-            (
-                "systematic-debugging.md",
-                r#"---
+    // 1. Gather Global Skills (~/.HedgeCoding/skills/)
+    if let Some(home) = dirs::home_dir() {
+        let global_skills_dir = home.join(".HedgeCoding").join("skills");
+        // Seed default skills globally
+        if !global_skills_dir.exists() {
+            if let Ok(_) = std::fs::create_dir_all(&global_skills_dir) {
+                let default_skills = vec![
+                    (
+                        "systematic-debugging.md",
+                        r#"---
 name: Systematic Debugging
 description: Enforces a rigorous 4-step root-cause analysis process before fixing any bug.
 category: Architecture
@@ -1076,10 +1083,10 @@ When asked to fix a bug or investigate an issue, you MUST follow this 4-step fra
 1. Implement the minimal fix required.
 2. If tests exist, explain how they validate the fix.
 "#
-            ),
-            (
-                "test-driven-development.md",
-                r#"---
+                    ),
+                    (
+                        "test-driven-development.md",
+                        r#"---
 name: Test-Driven Development
 description: Forces the AI to write failing tests before implementing business logic.
 category: Quality
@@ -1095,59 +1102,66 @@ Whenever you are asked to implement a new feature, a new function, or a complex 
 
 Never write the implementation code before the test.
 "#
-            )
-        ];
+                    )
+                ];
 
-        for (filename, content) in default_skills {
-            let _ = std::fs::write(skills_dir.join(filename), content);
+                for (filename, content) in default_skills {
+                    let _ = std::fs::write(global_skills_dir.join(filename), content);
+                }
+            }
+        }
+        dirs_to_scan.push(global_skills_dir);
+    }
+
+    // 2. Gather Local Skills ([project]/.hedgecoding/skills/)
+    dirs_to_scan.push(dir.join(".hedgecoding").join("skills"));
+
+    for s_dir in dirs_to_scan {
+        if !s_dir.exists() { continue; }
+        if let Ok(entries) = std::fs::read_dir(&s_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().and_then(|e| e.to_str()) != Some("md") {
+                    continue;
+                }
+
+                let filename = path.file_stem().unwrap_or_default().to_string_lossy().to_string();
+                if seen_ids.contains(&filename) { 
+                    skills.retain(|s: &SkillMeta| s.id != filename); // local overrides global
+                }
+                seen_ids.insert(filename.clone());
+
+                let content = std::fs::read_to_string(&path)
+                    .unwrap_or_default();
+                let (meta, body) = parse_frontmatter(&content);
+
+                skills.push(SkillMeta {
+                    id: filename.clone(),
+                    name: meta.get("name").cloned().unwrap_or_else(|| {
+                        filename.replace('-', " ")
+                            .split_whitespace()
+                            .map(|w| {
+                                let mut c = w.chars();
+                                match c.next() {
+                                    None => String::new(),
+                                    Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+                                }
+                            })
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    }),
+                    description: meta.get("description").cloned().unwrap_or_default(),
+                    category: meta.get("category").cloned().unwrap_or_else(|| "General".to_string()),
+                    auto_inject: meta.get("auto_inject").map(|v| v == "true").unwrap_or(false),
+                    char_count: body.len(),
+                    when_to_use: meta.get("when_to_use").cloned()
+                        .or_else(|| meta.get("when-to-use").cloned()),
+                });
+            }
         }
     }
 
-    let mut skills = vec![];
-
-    let entries = std::fs::read_dir(&skills_dir)
-        .map_err(|e| format!("Cannot read skills dir: {}", e))?;
-
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) != Some("md") {
-            continue;
-        }
-
-        let filename = path.file_stem().unwrap_or_default().to_string_lossy().to_string();
-        let content = std::fs::read_to_string(&path)
-            .unwrap_or_else(|_| String::new());
-
-        let (meta, body) = parse_frontmatter(&content);
-
-        skills.push(SkillMeta {
-            id: filename.clone(),
-            name: meta.get("name").cloned().unwrap_or_else(|| {
-                // Nicify the filename: rust-safety -> Rust Safety
-                filename.replace('-', " ")
-                    .split_whitespace()
-                    .map(|w| {
-                        let mut c = w.chars();
-                        match c.next() {
-                            None => String::new(),
-                            Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
-                        }
-                    })
-                    .collect::<Vec<_>>()
-                    .join(" ")
-            }),
-            description: meta.get("description").cloned().unwrap_or_default(),
-            category: meta.get("category").cloned().unwrap_or_else(|| "General".to_string()),
-            auto_inject: meta.get("auto_inject").map(|v| v == "true").unwrap_or(false),
-            char_count: body.len(),
-            when_to_use: meta.get("when_to_use").cloned()
-                .or_else(|| meta.get("when-to-use").cloned()),
-        });
-    }
-
-    // Sort by category, then name
     skills.sort_by(|a, b| a.category.cmp(&b.category).then(a.name.cmp(&b.name)));
-
     Ok(skills)
 }
 
@@ -1155,14 +1169,23 @@ Never write the implementation code before the test.
 #[tauri::command]
 fn load_skill(skill_id: String, state: State<'_, AppState>) -> Result<String, String> {
     let dir = state.project_dir.lock().map_err(|e| e.to_string())?;
-    let skill_path = dir.join(".hedgecoding").join("skills")
-        .join(format!("{}.md", skill_id));
+    let local_path = dir.join(".hedgecoding").join("skills").join(format!("{}.md", skill_id));
+    let mut target_path = local_path.clone();
 
-    if !skill_path.exists() {
-        return Err(format!("Skill '{}' not found", skill_id));
+    if !target_path.exists() {
+        if let Some(home) = dirs::home_dir() {
+            let global_path = home.join(".HedgeCoding").join("skills").join(format!("{}.md", skill_id));
+            if global_path.exists() {
+                target_path = global_path;
+            }
+        }
     }
 
-    let content = std::fs::read_to_string(&skill_path)
+    if !target_path.exists() {
+        return Err(format!("Skill '{}' not found in local or global skills directory", skill_id));
+    }
+
+    let content = std::fs::read_to_string(&target_path)
         .map_err(|e| format!("Failed to read skill: {}", e))?;
 
     // Return body only (strip frontmatter)
