@@ -255,16 +255,25 @@ Real-time file change detection via the `notify` crate. Auto-invalidates stale a
 
 ## Installation
 
-### Download Pre-built Installer
+### 1-Click Install (Coming Soon)
+*Once the first release is published, you can install Hedge Coding instantly without compiling.*
 
-> 🚧 **Pre-built installers coming soon.** For now, build from source (takes ~3 minutes).
+#### Windows
+```powershell
+irm https://raw.githubusercontent.com/edison7009/hedge-coding/main/install.ps1 | iex
+```
 
-### Build from Source
+#### macOS / Linux
+```bash
+curl -fsSL https://raw.githubusercontent.com/edison7009/hedge-coding/main/install.sh | bash
+```
+
+<details>
+<summary><strong>Build from Source (For Developers)</strong></summary>
 
 **Prerequisites:** [Rust](https://rustup.rs/) (stable) + [Node.js](https://nodejs.org/) (v18+)
 
 #### Windows
-
 ```powershell
 git clone https://github.com/edison7009/hedge-coding.git
 cd hedge-coding
@@ -275,7 +284,6 @@ cargo tauri build
 ```
 
 #### macOS
-
 ```bash
 git clone https://github.com/edison7009/hedge-coding.git
 cd hedge-coding
@@ -286,19 +294,16 @@ cargo tauri build
 ```
 
 #### Linux
-
 ```bash
-# Install system dependencies (Debian/Ubuntu)
 sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev
-
 git clone https://github.com/edison7009/hedge-coding.git
 cd hedge-coding
 cargo install tauri-cli --version "^2"
 cd src-ui && npm install && cd ..
 cargo tauri build
-# Package → target/release/bundle/deb/hedge-coding_*.deb
-# or      → target/release/bundle/appimage/hedge-coding_*.AppImage
+# Output → target/release/bundle/deb/hedge-coding_*.deb
 ```
+</details>
 
 After installation, launch **Hedge Coding** from your desktop — no terminal needed.
 
