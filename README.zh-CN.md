@@ -5,12 +5,7 @@
 <h1 align="center">Hedge Coding</h1>
 
 <p align="center">
-  <strong>AI 编程的超级提示词编译器。</strong><br/>
-  读遍一切，不改一行。让任何模型都成为外科手术级工具。
-</p>
-
-<p align="center">
-  <a href="./README.md">🇺🇸 English</a>
+  <strong>AI 编程的超级提示词编译器。</strong>
 </p>
 
 <p align="center">
@@ -27,18 +22,9 @@
   <a href="#技术架构">技术架构</a> •
   <a href="#安装">安装</a> •
   <a href="#功能特性">功能特性</a> •
-  <a href="#开发路线">开发路线</a>
+  <a href="#开发路线">开发路线</a> •
+  <a href="./README.md">🇺🇸 English</a>
 </p>
-
----
-
-## 为什么选择 Hedge Coding？
-
-传统 AI 编程助手有 **~70% 的 Token 在盲目探索中烧掉** —— 扫描目录、反复读文件、从零构建上下文。这不是投资，这是赌博。
-
-Hedge Coding 用一条**精准情报管道**取代赌博：廉价模型负责侦察，编译结构化 **Super Prompt**，然后交给你选择的任何模型执行。质量在提示词里，不在工具里。
-
-> *让廉价模型收集情报、编译超级提示词；再把精心备好的顶尖食材和食谱投喂给任何模型 —— 哪怕是新手厨师，也能端出米其林盛宴。*
 
 ---
 

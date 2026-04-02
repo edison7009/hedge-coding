@@ -5,12 +5,7 @@
 <h1 align="center">Hedge Coding</h1>
 
 <p align="center">
-  <strong>The Super Prompt Compiler for AI Coding.</strong><br/>
-  Read everything. Write nothing. Make every model a surgical instrument.
-</p>
-
-<p align="center">
-  <a href="./README.zh-CN.md">🇨🇳 中文文档</a>
+  <strong>The Super Prompt Compiler for AI Coding.</strong>
 </p>
 
 <p align="center">
@@ -27,18 +22,9 @@
   <a href="#architecture">Architecture</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#features">Features</a> •
-  <a href="#roadmap">Roadmap</a>
+  <a href="#roadmap">Roadmap</a> •
+  <a href="./README.zh-CN.md">🇨🇳 中文文档</a>
 </p>
-
----
-
-## Why Hedge Coding?
-
-Standard AI coding assistants burn **~70% of tokens on blind exploration** — scanning directories, re-reading files, building context from scratch. That's not investing, that's gambling.
-
-Hedge Coding replaces the gamble with a **precision intelligence pipeline**: cheap models gather reconnaissance, compile a structured **Super Prompt**, and hand it to any model you choose. The quality lives in the prompt, not the tool.
-
-> *Even a novice chef can serve a Michelin feast — when the ingredients and recipes are prepared by a master strategist.*
 
 ---
 
