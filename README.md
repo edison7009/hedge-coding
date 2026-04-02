@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.svg" width="80" alt="Hedge Coding" />
+  <img src="logo.png" width="80" alt="Hedge Coding" />
 </p>
 
 <h1 align="center">Hedge Coding</h1>
@@ -7,6 +7,10 @@
 <p align="center">
   <strong>The Super Prompt Compiler for AI Coding.</strong><br/>
   Read everything. Write nothing. Make every model a surgical instrument.
+</p>
+
+<p align="center">
+  <a href="./README.zh-CN.md">🇨🇳 中文文档</a>
 </p>
 
 <p align="center">
