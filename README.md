@@ -30,14 +30,6 @@
   <a href="#roadmap">Roadmap</a>
 </p>
 
-<p align="center">
-  <img src="screenshots/hedge-principles.png" width="800" alt="Hedge Coding — Hedge Principles & File Explorer" />
-</p>
-
-<p align="center">
-  <img src="screenshots/super-prompt.png" width="800" alt="Hedge Coding — Super Prompt Output" />
-</p>
-
 ---
 
 ## Why Hedge Coding?
@@ -78,6 +70,10 @@ Hedge Coding is architected around this single constraint: **maximize context pr
 | **Pro Quota** | Exhausted in **3–7 days** | **2× longer** output | **+10 days runway** |
 
 > The pipeline cost per task is ~$0.002. But the real alpha isn't the savings — it's the **first-try success rate**.
+
+<p align="center">
+  <img src="screenshots/hedge-principles.png" width="800" alt="Hedge Coding — Hedge Principles & File Explorer" />
+</p>
 
 ---
 
@@ -137,6 +133,10 @@ The budget model classifies every task and **adapts the prompt accordingly**:
 | **Large** | 15+ (comprehensive) | ✓ Inject | ✓ Inject | ~30K–80K |
 
 > Small tasks intentionally strip context. Less noise = higher precision for simple fixes.
+
+<p align="center">
+  <img src="screenshots/super-prompt.png" width="800" alt="Hedge Coding — Super Prompt Output" />
+</p>
 
 ---
 
@@ -219,6 +219,10 @@ Every component degrades gracefully. No single failure breaks the pipeline:
 
 ### 🗺️ Repo Map (Tree-sitter AST)
 Multi-language structural parsing — extracts every function, class, struct, interface, enum, and export into a compact symbol map. Supports **JavaScript, TypeScript, Python, Rust** with generic fallback for other languages.
+
+<p align="center">
+  <img src="screenshots/repo-map.png" width="800" alt="Hedge Coding — Repo Map & Tree-sitter AST" />
+</p>
 
 ### 🔍 Deep Analysis
 Budget model generates one-line semantic summaries for every file. Pre-computed and cached — zero cost at compile time. Gives the receiving model a complete understanding of your codebase without reading a single file.
