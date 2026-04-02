@@ -39,6 +39,10 @@ jobs:
         working-directory: ./src-ui
         run: npm install
 
+      - name: Build frontend
+        working-directory: ./src-ui
+        run: npm run build
+
       - name: Build and create release
         uses: tauri-apps/tauri-action@v0
         env:

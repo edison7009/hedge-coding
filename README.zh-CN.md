@@ -278,7 +278,7 @@ curl -fsSL https://raw.githubusercontent.com/edison7009/hedge-coding/main/instal
 git clone https://github.com/edison7009/hedge-coding.git
 cd hedge-coding
 cargo install tauri-cli --version "^2"
-cd src-ui && npm install && cd ..
+cd src-ui && npm install && npm run build && cd ..
 cargo tauri build
 # 安装包 → target\release\bundle\nsis\Hedge Coding_*.exe
 ```
@@ -288,7 +288,7 @@ cargo tauri build
 git clone https://github.com/edison7009/hedge-coding.git
 cd hedge-coding
 cargo install tauri-cli --version "^2"
-cd src-ui && npm install && cd ..
+cd src-ui && npm install && npm run build && cd ..
 cargo tauri build
 # 应用 → target/release/bundle/dmg/Hedge Coding_*.dmg
 ```
@@ -299,7 +299,7 @@ sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev
 git clone https://github.com/edison7009/hedge-coding.git
 cd hedge-coding
 cargo install tauri-cli --version "^2"
-cd src-ui && npm install && cd ..
+cd src-ui && npm install && npm run build && cd ..
 cargo tauri build
 # 安装包 → target/release/bundle/deb/hedge-coding_*.deb
 ```
