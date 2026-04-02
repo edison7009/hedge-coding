@@ -1,7 +1,0 @@
-  {
-    "name": "MiniMax-M2.7",
-    "modelId": "MiniMax-M2.7",
-    "baseUrl": "https://api.minimaxi.com/v1",
-    "apiKey": "sk-cp-du2qF-kDqV_acXSQVLDoZ_j5tBSAKzDwfWHII0uG5K5wMpyKgUrCUkPY8OvTfbnXazm440yluCJMxbOfL-ePdNCXssF4pE0cW871DNbV3sHuoqWAdgyRkYQ",
-    "anthropicUrl": "https://api.minimaxi.com/anthropic",
-  }
