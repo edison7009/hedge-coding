@@ -1040,7 +1040,67 @@ fn list_skills(state: State<'_, AppState>) -> Result<Vec<SkillMeta>, String> {
     let skills_dir = dir.join(".hedgecoding").join("skills");
 
     if !skills_dir.exists() {
-        return Ok(vec![]);
+        // Try to auto-seed default skills on first access for the project
+        if let Err(e) = std::fs::create_dir_all(&skills_dir) {
+            // If we don't have permission (e.g. read-only file system or OS Error 5), just return empty silently
+            eprintln!("[HC] Could not seed skills dir: {}", e);
+            return Ok(vec![]);
+        }
+
+        let default_skills = vec![
+            (
+                "systematic-debugging.md",
+                r#"---
+name: Systematic Debugging
+description: Enforces a rigorous 4-step root-cause analysis process before fixing any bug.
+category: Architecture
+---
+
+# Systematic Debugging Methodology
+
+When asked to fix a bug or investigate an issue, you MUST follow this 4-step framework. Do NOT jump straight to writing a fix or guessing the solution.
+
+## Step 1: Reproduce & Pinpoint
+1. Identify the exact line of code, API call, or UI component where the error originates.
+2. Formulate a clear mental model of how the data flows into this failure point.
+
+## Step 2: Root Cause Analysis (RCA)
+1. Ask "Why did this happen?" repeatedly until you reach the foundational logic error.
+2. Differentiate between the *symptom* (what the user sees) and the *disease* (the actual flawed assumption in the codebase).
+
+## Step 3: Propose Solution
+1. Explain the fix concisely.
+2. Outline any potential side effects this fix might have on other parts of the system.
+
+## Step 4: Red-Green-Refactor
+1. Implement the minimal fix required.
+2. If tests exist, explain how they validate the fix.
+"#
+            ),
+            (
+                "test-driven-development.md",
+                r#"---
+name: Test-Driven Development
+description: Forces the AI to write failing tests before implementing business logic.
+category: Quality
+---
+
+# Test-Driven Development (TDD) Protocol
+
+Whenever you are asked to implement a new feature, a new function, or a complex logic block, you MUST follow the TDD protocol.
+
+1. **RED**: Write the test FIRST. The test must accurately reflect the requirements and fail. Explain your test design.
+2. **GREEN**: Write the minimal implementation code to make the test pass. Do not over-engineer.
+3. **REFACTOR**: Clean up the code. Ensure there is no duplication, names are clear, and performance is optimal, without breaking the test.
+
+Never write the implementation code before the test.
+"#
+            )
+        ];
+
+        for (filename, content) in default_skills {
+            let _ = std::fs::write(skills_dir.join(filename), content);
+        }
     }
 
     let mut skills = vec![];

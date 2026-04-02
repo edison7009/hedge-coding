@@ -144,7 +144,9 @@ export function Explorer() {
 
       try {
         const cached = await commands.loadCachedAnalysis();
-        dispatch({ type: 'SET_AI_SUMMARIES', summaries: cached });
+        if (cached && typeof cached === 'object') {
+          dispatch({ type: 'SET_AI_SUMMARIES', summaries: cached });
+        }
       } catch {}
 
       try {

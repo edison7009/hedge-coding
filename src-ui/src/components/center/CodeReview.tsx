@@ -364,13 +364,13 @@ export function CodeReview() {
             </div>
 
             {/* Scout Report status */}
-            {Object.keys(state.aiSummaries).length > 0 && (
+            {Object.keys(state.aiSummaries || {}).length > 0 && (
               <div className="review-scout-notice">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
-                Scout report available: {Object.keys(state.aiSummaries).length} file summaries will enrich the review prompt.
+                Scout report available: {Object.keys(state.aiSummaries || {}).length} file summaries will enrich the review prompt.
               </div>
             )}
 

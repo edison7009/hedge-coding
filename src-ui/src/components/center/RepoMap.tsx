@@ -99,7 +99,7 @@ export function RepoMap() {
 
     setErrorMsg('');
     dispatch({ type: 'RESET_ANALYSIS_COST' });
-    const unanalyzed = withSym.filter(f => !state.aiSummaries[f.relative_path]);
+    const unanalyzed = withSym.filter(f => !(state.aiSummaries || {})[f.relative_path]);
     const filesToAnalyze = unanalyzed.map(f => f.relative_path);
     if (filesToAnalyze.length === 0) return;
 
@@ -196,7 +196,7 @@ export function RepoMap() {
           <button 
             className={`deep-analyze-btn ${state.deepAnalysisRunning ? 'btn-danger' : ''}`} 
             onClick={handleToggleAnalyze}
-            disabled={withSym.length === Object.keys(state.aiSummaries).length && !state.deepAnalysisRunning}
+            disabled={withSym.length === Object.keys(state.aiSummaries || {}).length && !state.deepAnalysisRunning}
           >
             {state.deepAnalysisRunning ? (
               <>
@@ -296,9 +296,9 @@ export function RepoMap() {
           <div className="empty-state"></div>
         ) : (
           withSym.map((f: FileEntry) => {
-            const hasSummary = !!state.aiSummaries[f.relative_path];
+            const hasSummary = !!(state.aiSummaries || {})[f.relative_path];
             const isAnalyzing = state.analyzingFile === f.relative_path;
-            const summaryText = state.aiSummaries[f.relative_path] || '';
+            const summaryText = (state.aiSummaries || {})[f.relative_path] || '';
             const isExpanded = expandedFiles.has(f.relative_path);
 
             return (

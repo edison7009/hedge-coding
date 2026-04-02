@@ -69,6 +69,43 @@ struct Cli {
     port: u16,
 }
 
+/// Create ~/.HedgeCoding/ and a template models.json on first launch.
+/// Only runs if the directory or file doesn't already exist.
+/// Errors are non-fatal — the app still launches if this fails.
+fn bootstrap_user_config() {
+    let Some(home) = dirs::home_dir() else { return };
+    let hc_dir = home.join(".HedgeCoding");
+
+    // Create the directory (no-op if it already exists)
+    if let Err(e) = std::fs::create_dir_all(&hc_dir) {
+        eprintln!("[HC] Could not create ~/.HedgeCoding: {}", e);
+        return;
+    }
+
+    let models_path = hc_dir.join("models.json");
+    if models_path.exists() {
+        return; // User already has a config — never overwrite
+    }
+
+    // Write a documented template — user fills in their apiKey
+    let template = r#"[
+  {
+    "name": "My Budget Model",
+    "modelId": "your-model-id",
+    "baseUrl": "https://api.example.com/v1",
+    "apiKey": "",
+    "anthropicUrl": ""
+  }
+]
+"#;
+
+    if let Err(e) = std::fs::write(&models_path, template) {
+        eprintln!("[HC] Could not write template models.json: {}", e);
+    } else {
+        eprintln!("[HC] Created template config: {}", models_path.display());
+    }
+}
+
 fn main() -> Result<()> {
     let mut args: Vec<String> = std::env::args().collect();
     
@@ -92,6 +129,8 @@ fn main() -> Result<()> {
             "  {}\n",
             "Starting Tauri Desktop UI...".bright_white().bold()
         );
+        // Ensure ~/.HedgeCoding/ and a template models.json exist before the UI loads.
+        bootstrap_user_config();
         return server::start_ui(cli.dir.clone());
     }
 
