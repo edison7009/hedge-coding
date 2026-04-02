@@ -30,6 +30,14 @@
   <a href="#开发路线">开发路线</a>
 </p>
 
+<p align="center">
+  <img src="screenshots/hedge-principles.png" width="800" alt="Hedge Coding — 对冲原理 & 文件浏览器" />
+</p>
+
+<p align="center">
+  <img src="screenshots/super-prompt.png" width="800" alt="Hedge Coding — Super Prompt 编译输出" />
+</p>
+
 ---
 
 ## 为什么选择 Hedge Coding？

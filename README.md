@@ -30,6 +30,14 @@
   <a href="#roadmap">Roadmap</a>
 </p>
 
+<p align="center">
+  <img src="screenshots/hedge-principles.png" width="800" alt="Hedge Coding — Hedge Principles & File Explorer" />
+</p>
+
+<p align="center">
+  <img src="screenshots/super-prompt.png" width="800" alt="Hedge Coding — Super Prompt Output" />
+</p>
+
 ---
 
 ## Why Hedge Coding?
