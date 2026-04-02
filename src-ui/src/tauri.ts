@@ -187,16 +187,14 @@ export interface GrepMatch {
 
 // ─── Super Docs Types ────────────────────────────────────────────────────────
 
-export interface DocFormat {
-  value: string;
-  label: string;
-}
+export type DocFormat = 'docusaurus' | 'vitepress' | 'gitbook' | 'mkdocs' | 'markdown' | string;
 
 export interface DocsCompileResult {
   super_prompt: string;
   file_count: number;
   source_chars: number;
-  estimate: CostEstimate;
+  format_label: string;
+  estimate: TokenEstimate;
 }
 
 /// Raw snake_case shape returned by the Rust `load_prompt_history` command.
