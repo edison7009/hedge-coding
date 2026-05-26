@@ -45,7 +45,7 @@ Hedge Coding fixes this at the architectural layer:
 
 Tree-sitter generates a Repo Map of every module's signatures — compact enough to stay resident through the entire task
 
-The Super Prompt is pre-assembled with full dependency context, then handed to Opus as a single block
+The Super Prompt is pre-assembled with full dependency context, then handed to Opus/GPT as a single block
 
 Opus/GPT never has to choose between "see the local code" and "see the global structure" — it has both, at all times, with zero token round-trips
 
