@@ -26,24 +26,30 @@
   <a href="#roadmap">Roadmap</a> •
   <a href="./README.zh-CN.md">🇨🇳 中文文档</a>
 </p>
+
 ## Why Hedge Coding
 
 Every developer who's used an AI assistant has hit this wall:
+
 "My code worked. I asked the AI to optimize one module. It deleted critical logic it thought was redundant — because it couldn't see the other 9 modules that depended on it."
 
 This isn't an AI being dumb. It's an architectural failure:
 
 The agent's context window fills with tool-call results during exploration
+
 By the time it edits code, the global topology has been pushed out of attention
+
 Local optimization runs blind to global structure
+
 Hedge Coding fixes this at the architectural layer:
 
 Tree-sitter generates a Repo Map of every module's signatures — compact enough to stay resident through the entire task
+
 The Super Prompt is pre-assembled with full dependency context, then handed to Opus as a single block
+
 Opus never has to choose between "see the local code" and "see the global structure" — it has both, at all times, with zero token round-trips
+
 Your working code stays working. Optimization doesn't mean amnesia.
-
-
 
 ## The Hedge Philosophy
 
