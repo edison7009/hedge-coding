@@ -5,9 +5,8 @@
 <h1 align="center" style="border-bottom: none">Hedge Coding</h1>
 
 <p align="center">
-  <strong>Code graph tools demote Opus to cannon fodder.Hedge Coding promotes Opus to supreme commander.
-Code graph tools 让 Opus 沦为容易战死的士兵,Hedge Coding 让 Opus 成为总指挥。
-</strong>
+  <strong>Code graph tools demote Opus to cannon fodder.Hedge Coding promotes Opus to supreme commander.</strong>
+  <strong>Code graph tools 让 Opus 沦为容易战死的士兵,Hedge Coding 让 Opus 成为总指挥。</strong>
 </p>
 
 <p align="center">
