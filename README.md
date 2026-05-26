@@ -5,8 +5,8 @@
 <h1 align="center" style="border-bottom: none">Hedge Coding</h1>
 
 <p align="center">
-  <strong>Code graph tools demote Opus to cannon fodder.</strong><br>
-  <strong>Hedge Coding promotes Opus to supreme commander.</strong>
+  <strong>Code graph tools demote Opus/GPT to cannon fodder.</strong><br>
+  <strong>Hedge Coding promotes Opus/GPT to supreme commander.</strong>
 </p>
 
 <p align="center">
