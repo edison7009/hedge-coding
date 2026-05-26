@@ -5,8 +5,10 @@
 <h1 align="center" style="border-bottom: none">Hedge Coding</h1>
 
 <p align="center">
-  <strong>Code graph tools 只会让 Opus 沦为容易战死的士兵,而 Hedge Coding 让 Opus 成为总指挥。</strong>
+  <strong>Code graph tools 只会让 Opus 沦为容易战死的士兵。</strong><br>
+  <strong>而 Hedge Coding 让 Opus 成为总指挥。</strong>
 </p>
+
 
 <p align="center">
   <img src="https://img.shields.io/badge/Tauri-v2-blue?logo=tauri" alt="Tauri v2" />
