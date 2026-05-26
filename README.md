@@ -47,7 +47,7 @@ Tree-sitter generates a Repo Map of every module's signatures — compact enough
 
 The Super Prompt is pre-assembled with full dependency context, then handed to Opus as a single block
 
-Opus never has to choose between "see the local code" and "see the global structure" — it has both, at all times, with zero token round-trips
+Opus/GPT never has to choose between "see the local code" and "see the global structure" — it has both, at all times, with zero token round-trips
 
 Your working code stays working. Optimization doesn't mean amnesia.
 
