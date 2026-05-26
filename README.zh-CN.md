@@ -46,7 +46,7 @@ Hedge Coding 在架构层根治这个问题:
 
 Tree-sitter 把每一个模块的签名抽出来生成 Repo Map,紧凑到能在整个任务过程中一直驻留
 
-Super Prompt 是预编译的完整上下文块,一次性递给 Opus,中途不被打断
+Super Prompt 是预编译的完整上下文块,一次性递给 Opus/GPT,中途不被打断
 
 Opus/GPT 不需要在"看局部代码"和"看全局结构"之间二选一 —— 它两个都看着,token 零往返
 
