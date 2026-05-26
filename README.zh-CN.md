@@ -5,7 +5,7 @@
 <h1 align="center" style="border-bottom: none">Hedge Coding</h1>
 
 <p align="center">
-  <strong>AI 编程的超级提示词编译器。</strong>
+  <strong>Code graph tools 只会让 Opus 沦为容易战死的士兵,而 Hedge Coding 让 Opus 成为总指挥。</strong>
 </p>
 
 <p align="center">
